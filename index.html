@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Torsion Lab — Torsion Constant &amp; Moment of Inertia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --deep:#06182e;
+  --deep2:#0b2645;
+  --line:rgba(150,200,255,.16);
+  --line2:rgba(150,200,255,.34);
+  --paper:#e9f2ff;
+  --mute:#89aed4;
+  --amber:#ffb703;
+  --violet:#b39dff;
+  --signal:#ff5f57;
+  --ok:#4ade80;
+  --pad:clamp(12px,2.2vw,22px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'IBM Plex Sans Thai',system-ui,-apple-system,sans-serif;
+  background:var(--deep);color:var(--paper);overflow:hidden;
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:34px 34px;
+}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+body{display:flex;flex-direction:column;height:100dvh}
+.app{flex:1;min-height:0;display:flex;flex-direction:column}
+.footbar{flex:none;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 14px;padding:5px 12px;border-top:1px solid var(--line);background:rgba(6,18,36,.9);font-size:clamp(9px,1.5vw,11px);line-height:1.5;color:var(--mute);text-align:center}.footbar .seg{white-space:nowrap}.footbar .dot{opacity:.5}.footbar .cred{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 8px}.swatch{display:flex;align-items:center;gap:6px;flex:none}.swatch .swt{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;color:#e9f2ff;min-width:84px;text-align:center;letter-spacing:.02em}.swatch button{height:32px;min-width:44px;padding:0 12px;border-radius:8px;border:1px solid var(--line2,rgba(150,200,255,.35));background:rgba(20,40,70,.8);color:#e9f2ff;font-size:15px;cursor:pointer}.swatch button#swBtn{min-width:64px;background:#2f7d5b;border-color:#3fae7c;font-weight:700}.swatch button#swBtn.run{background:#b34a42;border-color:#e0675d}
+.topbar{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  padding:calc(var(--pad)*.55) var(--pad);
+  padding-top:calc(env(safe-area-inset-top) + var(--pad)*.55);
+  border-bottom:1px solid var(--line2);
+  background:rgba(6,24,46,.86);backdrop-filter:blur(6px);
+}
+.brand{min-width:0}
+.brand h1{font-size:clamp(14px,2.3vw,18px);font-weight:700;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand p{font-size:clamp(10px,1.5vw,12px);color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spacer{flex:1}
+.iconbtn{
+  border:1px solid var(--line2);background:transparent;color:var(--paper);
+  border-radius:8px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;white-space:nowrap;
+}
+.iconbtn:hover{border-color:var(--violet);color:var(--violet)}
+.iconbtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+
+.stage{flex:1;display:flex;flex-direction:column;min-height:0}
+.track{
+  flex:0 0 68%;min-height:190px;max-height:min(68%, 68vh);width:100%;
+  border-bottom:1px solid var(--line2);
+  padding:calc(var(--pad)*.7) var(--pad) 10px var(--pad);
+  display:flex;flex-direction:column;
+}
+.track-head{flex:0 0 auto;font-size:10px;letter-spacing:2px;color:var(--mute);text-transform:uppercase;margin-bottom:6px}
+.zone{flex:1;position:relative;min-height:0;overflow:hidden}
+.zone svg{position:absolute;inset:0;width:100%;height:100%}
+.viewtag{
+  position:absolute;left:0;top:0;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  color:var(--mute);letter-spacing:1px;pointer-events:none;
+}
+
+.panel{flex:1;min-width:0;overflow-y:auto;padding:var(--pad);padding-bottom:calc(var(--pad) + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.card{border:1px solid var(--line2);border-radius:10px;padding:14px;margin-bottom:12px;background:rgba(11,38,69,.55)}
+.eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.stations{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  position:relative;flex:1 1 auto;min-width:78px;
+  border:1px solid var(--line2);background:transparent;color:var(--mute);
+  border-radius:8px;padding:9px 6px 8px;cursor:pointer;text-align:center;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;line-height:1.3;
+}
+.chip .cap{display:block;font-size:9px;letter-spacing:1px;opacity:.75;margin-bottom:3px}
+.chip .chipsub{display:block;font-size:9px;color:var(--mute);font-weight:400;margin-top:3px;opacity:.85}
+.chip.on{border-color:var(--violet);color:var(--violet);background:rgba(179,157,255,.13)}
+.chip.done::after{content:'';position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.chip:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.readout{display:flex;gap:18px;align-items:flex-end;margin-top:14px;flex-wrap:wrap}
+.big{font-family:'IBM Plex Mono',monospace;font-size:clamp(22px,4.4vw,34px);font-weight:600;line-height:1;color:var(--violet)}
+.big small{font-size:.44em;color:var(--paper);margin-left:5px;font-weight:400}
+.big .cap{display:block;font-size:9px;letter-spacing:1.5px;color:var(--mute);margin-bottom:6px;font-family:'IBM Plex Sans Thai',sans-serif;text-transform:uppercase}
+.hint{font-size:12px;color:var(--mute);line-height:1.6;margin-top:8px}
+.keyline{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--mute);line-height:1.7;margin-top:10px}
+
+.act{
+  width:100%;border:none;border-radius:10px;padding:16px;cursor:pointer;
+  background:var(--violet);color:#1c1140;font-weight:700;font-size:16px;
+  font-family:'IBM Plex Sans Thai',sans-serif;
+}
+.act.stop{background:var(--signal);color:#33060a}
+.act:disabled{background:#3a4d66;color:var(--mute);cursor:not-allowed}
+.act:focus-visible{outline:2px solid var(--paper);outline-offset:3px}
+.status{text-align:center;font-size:12px;color:var(--mute);margin-top:8px;min-height:18px;font-family:'IBM Plex Mono',monospace}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:var(--mute);text-align:left;font-weight:500;padding:0 5px 8px 0;border-bottom:1px solid var(--line2)}
+td{padding:6px 5px 6px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n{font-family:'IBM Plex Mono',monospace;color:var(--mute);width:26px}
+td.par{font-family:'IBM Plex Mono',monospace;color:var(--paper);white-space:nowrap;font-size:11px}
+input[type=text],input[type=number],input[type=password],input[type=email],select{
+  width:100%;background:rgba(6,24,46,.7);border:1px solid var(--line2);color:var(--paper);
+  border-radius:7px;padding:9px 10px;font-size:14px;font-family:'IBM Plex Mono',monospace;
+}
+select{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px}
+input:focus,select:focus{outline:none;border-color:var(--violet)}
+input::placeholder{color:#5d7fa3}
+.del{background:none;border:none;color:#7089a8;font-size:16px;cursor:pointer;padding:2px 5px;line-height:1}
+.del:hover{color:var(--signal)}
+.empty{font-size:12px;color:var(--mute);padding:14px 0;text-align:center;line-height:1.6}
+.row2{display:flex;gap:8px;margin-top:10px}
+.row2 .iconbtn{flex:1;text-align:center;padding:10px}
+.formula{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--violet);margin:6px 0 2px;line-height:1.9}
+.ftable{width:100%;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--mute);margin-top:10px;line-height:1.9}
+.ftable b{color:var(--paper);font-weight:500}
+
+.mask{position:fixed;inset:0;background:rgba(3,12,24,.82);display:none;align-items:center;justify-content:center;padding:14px;z-index:40}
+.mask.on{display:flex}
+.modal{width:100%;max-width:470px;max-height:88dvh;overflow-y:auto;background:var(--deep2);border:1px solid var(--line2);border-radius:12px;padding:18px}
+.modal h2{font-size:16px;margin-bottom:14px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--mute);margin-bottom:6px}
+.orow{border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:9px}
+.orow .otop{display:flex;gap:7px;align-items:center;margin-bottom:7px}
+.orow .oidx{flex:0 0 16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mute)}
+.orow .odims{display:flex;gap:7px}
+.orow .odims .cell{flex:1}
+.orow .odims .cell span{display:block;font-size:9px;letter-spacing:.5px;color:var(--mute);margin-bottom:4px;font-family:'IBM Plex Mono',monospace;min-height:12px}
+.seg{display:flex;gap:6px}
+.seg button{
+  flex:1;padding:9px;border-radius:7px;border:1px solid var(--line2);background:transparent;
+  color:var(--mute);font-size:12px;cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;
+}
+.seg button.on{border-color:var(--violet);color:var(--violet);background:rgba(179,157,255,.12)}
+.linkbox{font-family:'IBM Plex Mono',monospace;font-size:11px;word-break:break-all;background:rgba(6,24,46,.8);border:1px solid var(--line);border-radius:7px;padding:9px;color:var(--mute);margin-top:8px;max-height:78px;overflow-y:auto}
+.note{font-size:11px;color:var(--mute);line-height:1.6;margin-top:6px}
+.note.bad{color:var(--signal)}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
+  background:var(--ok);color:#04220f;font-size:13px;font-weight:600;padding:10px 18px;border-radius:99px;
+  opacity:0;pointer-events:none;transition:.22s;z-index:60;
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:560px){
+  .track{min-height:170px}
+  .brand p{display:none}
+  .chip{min-width:64px;font-size:11px;padding:8px 3px}
+  .readout{gap:12px}
+}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1 data-en="Torsion Lab" data-th="ปฏิบัติการการบิด">Torsion Lab</h1>
+      <p data-en="Find the torsion constant, then the moment of inertia of each plate" data-th="หาค่าคงตัวการบิด แล้วหาโมเมนต์ความเฉื่อยของแผ่นแต่ละรูปทรง">Torsion constant and moment of inertia</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="langBtn" onclick="toggleLang()">ไทย</button>
+    <button class="iconbtn" id="gearBtn" onclick="askPw()" data-en="Teacher" data-th="ครู">Teacher</button>
+  </div>
+
+  <div class="stage">
+    <div class="track">
+      <div class="track-head" data-en="Torsion pendulum — seen from above" data-th="ลูกตุ้มบิด — ภาพมองจากด้านบน">Torsion pendulum</div>
+      <div class="zone" id="zone">
+        <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+        <span class="viewtag" id="viewtag"></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="card">
+        <div class="eyebrow" data-en="Choose an object — 5 to measure" data-th="เลือกวัตถุ — ต้องวัดครบ 5 ชิ้น">Choose an object</div>
+        <div class="stations" id="stations"></div>
+        <div class="keyline" id="keyLine" style="display:none"></div>
+        <button class="act" id="spinBtn" onclick="toggleSpin()" style="margin-top:12px" data-en="Start twisting" data-th="เริ่มบิด">Start twisting</button>
+        <div class="status mono" id="status"></div>
+        <div class="hint" id="countHint"></div>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow" data-en="Your measurements" data-th="ผลการจับเวลาของคุณ">Your measurements</div>
+        <input type="text" id="nameIn" placeholder="Name / Class" data-en-ph="Name / Class" data-th-ph="ชื่อ / ห้อง" oninput="saveName()">
+        <div style="height:10px"></div>
+        <table>
+          <thead><tr>
+            <th style="width:26px">#</th>
+            <th data-en="Object" data-th="วัตถุ">Object</th>
+            <th id="thTime">Time (s)</th>
+            <th style="width:26px"></th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="empty" id="empty" data-en="No trials yet. Pick an object above and start the twist." data-th="ยังไม่มีข้อมูล เลือกวัตถุด้านบนแล้วกดเริ่มบิด">No trials yet.</div>
+        <div class="row2">
+          <button class="iconbtn" onclick="copyTable()" data-en="Copy" data-th="คัดลอก">Copy</button>
+          <button class="iconbtn" onclick="downloadCSV()" data-en="CSV" data-th="CSV">CSV</button>
+          <button class="iconbtn" onclick="clearTrials()" data-en="Clear" data-th="ล้าง">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow" data-en="Step 1 — the torsion constant" data-th="ขั้นที่ 1 — หาค่าคงตัวการบิด">Step 1</div>
+        <div class="formula">T = 2π · √(I / κ)<br>κ = 4π² · I / T²</div>
+        <div class="hint" data-en="Object 1 is your reference: its shape has an exact formula, so you can calculate its I from the mass and size shown. Measure its period, then use it to find κ for the wire. Convert grams to kilograms and centimetres to metres first." data-th="วัตถุชิ้นที่ 1 คือตัวอ้างอิง เพราะรูปทรงมีสูตรตรงไปตรงมา ให้คำนวณ I จากมวลและขนาดที่แอปบอกไว้ จับเวลาหาคาบ T แล้วนำไปหาค่า κ ของเส้นลวด อย่าลืมแปลงกรัมเป็นกิโลกรัม และเซนติเมตรเป็นเมตรก่อนคำนวณ">Object 1 is your reference.</div>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow" data-en="Step 2 — moment of inertia" data-th="ขั้นที่ 2 — หาโมเมนต์ความเฉื่อย">Step 2</div>
+        <div class="formula">I = κ · T² / 4π²</div>
+        <div class="hint" data-en="For objects 2 to 5, use the κ you just found to work out I from your measured period. Then calculate the theoretical value from the formulas below and compare the two with a percentage difference." data-th="สำหรับวัตถุชิ้นที่ 2 ถึง 5 ให้ใช้ค่า κ ที่เพิ่งหาได้ ย้อนกลับไปหาค่า I จากคาบที่จับได้ จากนั้นคำนวณค่าตามทฤษฎีจากสูตรด้านล่าง แล้วเทียบกันเป็นเปอร์เซ็นต์ความคลาดเคลื่อน">Compare with theory.</div>
+        <div class="ftable" id="ftable"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TEACHER SETTINGS ============ -->
+<div class="mask" id="mask" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <h2 data-en="Teacher settings" data-th="ตั้งค่าสำหรับครู">Teacher settings</h2>
+
+    <div class="field">
+      <label data-en="Torsion constant of the wire, κ (N·m/rad, 0.001–2)" data-th="ค่าคงตัวการบิดของเส้นลวด κ (N·m/rad, 0.001–2)">Torsion constant κ</label>
+      <input type="number" id="setK" min="0.001" max="2" step="0.001">
+      <div class="note" data-en="This is the answer students are looking for, so it never appears on their screen." data-th="ค่านี้คือคำตอบที่นักเรียนต้องหา จึงไม่ปรากฏบนหน้าจอของเขา">Never shown to students.</div>
+    </div>
+
+    <div class="field">
+      <label data-en="Oscillations to count (3–30)" data-th="จำนวนรอบที่ให้นับ (3–30)">Oscillations to count</label>
+      <input type="number" id="setN" min="3" max="30" step="1">
+    </div>
+
+    <div class="field">
+      <label data-en="Twist angle (degrees, 10–150)" data-th="มุมบิด (องศา, 10–150)">Twist angle (degrees)</label>
+      <input type="number" id="setAmp" min="10" max="150" step="5">
+      <div class="note" data-en="Unlike a swinging pendulum, the period of a torsion pendulum does not depend on the angle, so a large twist is fine and makes counting easier." data-th="ต่างจากลูกตุ้มแกว่ง คาบของลูกตุ้มบิดไม่ขึ้นกับมุม จะบิดมากก็ได้ และยิ่งบิดมากยิ่งนับรอบง่าย">Angle does not change the period.</div>
+    </div>
+
+    <div class="field">
+      <label data-en="Five objects — shape, mass (g), size (cm)" data-th="วัตถุ 5 ชิ้น — รูปทรง, มวล (กรัม), ขนาด (ซม.)">Five objects</label>
+      <div id="orows"></div>
+      <div class="note" data-en="Object 1 is the reference students use to find κ, so give it a shape with a simple formula." data-th="วัตถุชิ้นที่ 1 คือตัวอ้างอิงที่นักเรียนใช้หา κ ควรเลือกรูปทรงที่มีสูตรตรงไปตรงมา">Object 1 is the reference.</div>
+      <div class="note bad" id="objWarn" style="display:none"></div>
+    </div>
+
+    <div class="field">
+      <label data-en="Sound" data-th="เสียง">Sound</label>
+      <div class="seg">
+        <button id="snd-on" onclick="setSound(true)" data-en="On" data-th="เปิด">On</button>
+        <button id="snd-off" onclick="setSound(false)" data-en="Off" data-th="ปิด">Off</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label data-en="Answer key (teacher view only)" data-th="เฉลย (แสดงเฉพาะหน้าครู)">Answer key</label>
+      <div class="seg">
+        <button id="key-on" onclick="setKey(true)" data-en="Show" data-th="แสดง">Show</button>
+        <button id="key-off" onclick="setKey(false)" data-en="Hide" data-th="ซ่อน">Hide</button>
+      </div>
+      <div class="note" data-en="The student link never shows the answer, whatever you pick here." data-th="ลิงก์ของนักเรียนจะไม่แสดงเฉลย ไม่ว่าจะตั้งค่านี้ไว้อย่างไร">Students never see the key.</div>
+    </div>
+
+    <button class="act" style="padding:13px;font-size:14px" onclick="makeLink()" data-en="Create student link" data-th="สร้างลิงก์สำหรับนักเรียน">Create student link</button>
+    <div class="linkbox" id="linkBox" style="display:none"></div>
+    <button class="iconbtn" id="copyLinkBtn" style="width:100%;margin-top:8px;display:none" onclick="copyLink()" data-en="Copy link" data-th="คัดลอกลิงก์">Copy link</button>
+    <div class="note" id="linkNote" style="display:none" data-en="Copied. Send this link to the class — every value is locked and the settings button is hidden. Change κ and make another link to give a second group a different wire." data-th="คัดลอกแล้ว ส่งลิงก์นี้ให้นักเรียน ทุกค่าจะถูกล็อกและปุ่มตั้งค่าจะถูกซ่อน ถ้าอยากให้อีกกลุ่มได้เส้นลวดคนละเส้น ให้เปลี่ยนค่า κ แล้วสร้างลิงก์ใหม่">Copied.</div>
+
+    <button class="iconbtn" style="width:100%;margin-top:14px" onclick="openChg()" data-en="Change password" data-th="เปลี่ยนรหัสผ่าน">Change password</button>
+    <div class="row2">
+      <button class="iconbtn" onclick="closeSettings()" data-en="Close" data-th="ปิด">Close</button>
+      <button class="iconbtn" onclick="applySettings()" data-en="Apply" data-th="ใช้ค่านี้">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="footbar"><div class="swatch"><span class="swt" id="swT">00:00.00</span><button id="swBtn" type="button" aria-label="Start / Stop stopwatch" title="Start / Stop">&#9654;</button><button id="swReset" type="button" aria-label="Reset stopwatch" title="Reset">&#8634;</button></div><div class="cred" id="credit"><span class="seg" data-en="Asst.Prof.Dr. Rossumont Jaryabhand" data-th="ผศ.ดร.รสสุมนต์ จารยะพันธุ์">Asst.Prof.Dr. Rossumont Jaryabhand</span><span class="dot">·</span><span class="seg" data-en="Rajamangala University of Technology Tawan-ok, Uthenthawai Campus" data-th="มหาวิทยาลัยเทคโนโลยีราชมงคลตะวันออก อุเทนถวาย">Rajamangala University of Technology Tawan-ok, Uthenthawai Campus</span><span class="dot">·</span><span class="seg" data-en="No Right Reserved" data-th="ไม่สงวนลิขสิทธิ์">No Right Reserved</span></div></div>
+<script>
+(function(){
+  var t0=0, acc=0, run=false, timer=null;
+  var T=document.getElementById('swT'), B=document.getElementById('swBtn'), R=document.getElementById('swReset');
+  if(!T||!B||!R) return;
+  function fmt(ms){
+    var c=Math.floor(ms/10), cs=c%100, s=Math.floor(c/100)%60, m=Math.floor(c/6000);
+    return (m<10?'0':'')+m+':'+(s<10?'0':'')+s+'.'+(cs<10?'0':'')+cs;
+  }
+  function cur(){ return acc + (run ? performance.now()-t0 : 0); }
+  function draw(){ T.textContent=fmt(cur()); }
+  B.addEventListener('click',function(){
+    if(run){ acc+=performance.now()-t0; run=false; clearInterval(timer); B.innerHTML='&#9654;'; B.classList.remove('run'); }
+    else   { t0=performance.now(); run=true; timer=setInterval(draw,30); B.innerHTML='&#9632;'; B.classList.add('run'); }
+    draw();
+  });
+  R.addEventListener('click',function(){
+    acc=0; if(run){ t0=performance.now(); } draw();
+  });
+})();
+</script>
+
+<div class="mask" id="pwMask" onclick="if(event.target===this)closePw()">
+  <div class="modal" style="max-width:340px">
+    <h2 data-en="Teacher password" data-th="รหัสผ่านครู">Teacher password</h2>
+    <div class="field">
+      <label for="pwIn" data-en="Enter the password to open the settings" data-th="ใส่รหัสผ่านเพื่อเข้าตั้งค่า">Enter the password to open the settings</label>
+      <input type="password" id="pwIn" autocomplete="off" onkeydown="if(event.key==='Enter')okPw()">
+      <div class="note" id="pwErr" style="display:none;color:#ff8f86"></div>
+    </div>
+    <div class="row2">
+      <button class="iconbtn" onclick="closePw()" data-en="Cancel" data-th="ยกเลิก">Cancel</button>
+      <button class="iconbtn" onclick="okPw()" data-en="Open" data-th="เข้า">Open</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Teacher password (same for every lab). Only a scrambled version is stored here. */
+var authed = false;
+try{ if(sessionStorage.getItem('glab_auth')==='1') authed = true; }catch(e){}
+var PW_HASH = '25t7oegqzpn';
+function pwNorm(s){
+  s = String(s);
+  try{ s = s.normalize('NFKC'); }catch(e){}
+  s = s.replace(/[\u2018\u2019\u201A\u201B\u2032\u02BC\u0060\u00B4]/g,"'");
+  return s.replace(/[\s\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g,'');
+}
+function pwHash(str){
+  var h1=0xdeadbeef, h2=0x41c6ce57;
+  for(var i=0,ch;i<str.length;i++){
+    ch=str.charCodeAt(i);
+    h1=Math.imul(h1^ch,2654435761); h2=Math.imul(h2^ch,1597334677);
+  }
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);
+}
+function askPw(){
+  if(authed){ openSettings(); return; }
+  document.getElementById('pwErr').style.display='none';
+  document.getElementById('pwIn').value='';
+  document.getElementById('pwMask').classList.add('on');
+  setTimeout(function(){ document.getElementById('pwIn').focus(); }, 50);
+}
+function closePw(){ document.getElementById('pwMask').classList.remove('on'); }
+function okPw(){
+  var v = document.getElementById('pwIn').value;
+  if(pwHash('glab:'+pwNorm(v)) === curPwHash()){
+    authed = true;
+    try{ sessionStorage.setItem('glab_auth','1'); }catch(e){}
+    closePw();
+    if(typeof renderKeys==='function') renderKeys();
+    if(typeof renderKey==='function') renderKey();
+    openSettings();
+  }else{
+    var e = document.getElementById('pwErr');
+    var nRead = pwNorm(v).length;
+    e.textContent = ((typeof lang!=='undefined' && lang==='th') ? 'รหัสผ่านไม่ถูกต้อง' : 'Wrong password') + ' (' + nRead + ' chars)';
+    e.style.display='block';
+    document.getElementById('pwIn').select();
+  }
+}
+</script>
+
+<div class="mask" id="chgMask" onclick="if(event.target===this)closeChg()">
+  <div class="modal" style="max-width:360px">
+    <h2 data-en="Change teacher password" data-th="เปลี่ยนรหัสผ่านครู">Change teacher password</h2>
+    <div class="field">
+      <label for="chgEmail" data-en="Owner email" data-th="อีเมลเจ้าของ">Owner email</label>
+      <input type="email" id="chgEmail" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="chgCode" data-en="Owner code (only the owner knows it)" data-th="รหัสเจ้าของ (มีแต่เจ้าของที่รู้)">Owner code (only the owner knows it)</label>
+      <input type="password" id="chgCode" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="chgNew" data-en="New password (at least 6 characters)" data-th="รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)">New password (at least 6 characters)</label>
+      <input type="password" id="chgNew" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label for="chgNew2" data-en="Type the new password again" data-th="พิมพ์รหัสผ่านใหม่อีกครั้ง">Type the new password again</label>
+      <input type="password" id="chgNew2" autocomplete="new-password">
+    </div>
+    <div class="note" id="chgMsg" style="display:none"></div>
+    <div class="note" data-en="The new password is saved on this device only. Other devices keep the original password." data-th="รหัสใหม่จะถูกจำไว้ในเครื่องนี้เท่านั้น เครื่องอื่นยังใช้รหัสเดิม">The new password is saved on this device only.</div>
+    <div class="row2">
+      <button class="iconbtn" onclick="closeChg()" data-en="Cancel" data-th="ยกเลิก">Cancel</button>
+      <button class="iconbtn" onclick="okChg()" data-en="Change" data-th="เปลี่ยน">Change</button>
+    </div>
+    <button class="iconbtn" style="width:100%;margin-top:8px" onclick="resetPw()" data-en="Go back to the original password" data-th="กลับไปใช้รหัสเดิม">Go back to the original password</button>
+  </div>
+</div>
+
+<script>
+/* Change the teacher password. Needs the owner e-mail AND the owner code.
+   Only scrambled copies of both are stored here (the code with PBKDF2-SHA256).
+   This is a light check — a single page cannot truly prove who someone is. */
+var EMAIL_HASH = '7vjkvrytnp';
+var OWNER_HASH = '1a1dac15aa96d84ebdf2be153899ddb0266ebb8f9aac5384d052ef4150601f78';
+function chgSay(en, th, ok){
+  var e = document.getElementById('chgMsg');
+  e.textContent = (typeof lang!=='undefined' && lang==='th') ? th : en;
+  e.style.color = ok ? '#7be0a8' : '#ff8f86';
+  e.style.display = 'block';
+}
+function hexOf(buf){
+  var a = new Uint8Array(buf), s = '';
+  for(var i=0;i<a.length;i++) s += (a[i]<16?'0':'') + a[i].toString(16);
+  return s;
+}
+/* resolves true / false, or null when this browser cannot do the check */
+function chgOwnerOK(){
+  var m = String(document.getElementById('chgEmail').value).trim().toLowerCase().replace(/\s/g,'');
+  if(pwHash('glabmail:'+m) !== EMAIL_HASH) return Promise.resolve(false);
+  if(!(window.crypto && crypto.subtle && window.TextEncoder)) return Promise.resolve(null);
+  var enc = new TextEncoder();
+  return crypto.subtle.importKey('raw', enc.encode(pwNorm(document.getElementById('chgCode').value)), 'PBKDF2', false, ['deriveBits'])
+    .then(function(k){
+      return crypto.subtle.deriveBits({name:'PBKDF2', salt:enc.encode('glab-owner-v1'), iterations:150000, hash:'SHA-256'}, k, 256);
+    })
+    .then(function(bits){ return hexOf(bits) === OWNER_HASH; })
+    .catch(function(){ return null; });
+}
+function chgDenied(r){
+  if(r === null){ chgSay('This browser cannot check the code here. Open the lab from its https web address.','เบราว์เซอร์นี้ตรวจรหัสที่นี่ไม่ได้ กรุณาเปิดแล็บจากที่อยู่เว็บ https',false); }
+  else { chgSay('The e-mail or the owner code is not correct.','อีเมลหรือรหัสเจ้าของไม่ถูกต้อง',false); }
+}
+function openChg(){
+  ['chgEmail','chgCode','chgNew','chgNew2'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('chgMsg').style.display='none';
+  document.getElementById('chgMask').classList.add('on');
+  setTimeout(function(){ document.getElementById('chgEmail').focus(); }, 50);
+}
+function closeChg(){ document.getElementById('chgMask').classList.remove('on'); }
+function okChg(){
+  var a = pwNorm(document.getElementById('chgNew').value), b = pwNorm(document.getElementById('chgNew2').value);
+  chgOwnerOK().then(function(r){
+    if(r !== true){ chgDenied(r); return; }
+    if(a.length < 6){ chgSay('The new password needs at least 6 characters.','รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัว',false); return; }
+    if(a !== b){ chgSay('The two passwords are not the same.','รหัสผ่านสองช่องไม่ตรงกัน',false); return; }
+    try{ localStorage.setItem('glab_pw_hash', pwHash('glab:'+a)); }
+    catch(e){ chgSay('This browser cannot save the password.','เบราว์เซอร์นี้บันทึกรหัสผ่านไม่ได้',false); return; }
+    chgSay('Password changed on this device.','เปลี่ยนรหัสผ่านในเครื่องนี้แล้ว',true);
+    setTimeout(closeChg, 1200);
+  });
+}
+function resetPw(){
+  chgOwnerOK().then(function(r){
+    if(r !== true){ chgDenied(r); return; }
+    try{ localStorage.removeItem('glab_pw_hash'); }catch(e){}
+    chgSay('Back to the original password.','กลับไปใช้รหัสเดิมแล้ว',true);
+    setTimeout(closeChg, 1200);
+  });
+}
+function curPwHash(){
+  try{ var s = localStorage.getItem('glab_pw_hash'); if(s) return s; }catch(e){}
+  return PW_HASH;
+}
+</script>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   1) Settings
+   A student link looks like this:
+   ?k=0.02&n=10&a=60&o=disc-500-10-0,ring-400-12-10,...&lock=1
+============================================================ */
+var SHAPES = ['disc','ring','square','rect','rod'];
+
+var SHAPE_NAME = {
+  disc:   { en:'Solid disc',        th:'จานกลมตัน' },
+  ring:   { en:'Ring',              th:'วงแหวน' },
+  square: { en:'Square plate',      th:'แผ่นจัตุรัส' },
+  rect:   { en:'Rectangular plate', th:'แผ่นผืนผ้า' },
+  rod:    { en:'Long bar',          th:'แท่งยาว' }
+};
+
+/* dimension captions, and the theory formula shown to students */
+var SHAPE_DIMS = {
+  disc:   { d1:{en:'R',en2:'radius',th:'รัศมี R'},      d2:null },
+  ring:   { d1:{en:'R₁',th:'R นอก'},                    d2:{en:'R₂',th:'R ใน'} },
+  square: { d1:{en:'a',th:'ด้าน a'},                     d2:null },
+  rect:   { d1:{en:'a',th:'ด้าน a'},                     d2:{en:'b',th:'ด้าน b'} },
+  rod:    { d1:{en:'L',th:'ยาว L'},                      d2:null }
+};
+
+var SHAPE_FORMULA = {
+  disc:   'I = ½ · M · R²',
+  ring:   'I = ½ · M · (R₁² + R₂²)',
+  square: 'I = (1/6) · M · a²',
+  rect:   'I = (1/12) · M · (a² + b²)',
+  rod:    'I = (1/12) · M · L²'
+};
+
+var DEF_OBJS = [
+  { t:'disc',   m:500, d1:10, d2:0  },
+  { t:'ring',   m:400, d1:12, d2:10 },
+  { t:'square', m:400, d1:20, d2:0  },
+  { t:'rect',   m:450, d1:25, d2:15 },
+  { t:'rod',    m:300, d1:30, d2:0  }
+];
+
+var cfg = {
+  kappa: 0.02,
+  n: 10,
+  amp: 60,
+  objs: DEF_OBJS.map(function(o){ return {t:o.t,m:o.m,d1:o.d1,d2:o.d2}; }),
+  sound: true,
+  key: false
+};
+
+var cur = 0;
+var locked = false;
+var lang = 'en';
+var trials = [];
+var spinning = false, spinRAF = null;
+var cx = 0, cy = 0;
+
+function clamp(v,a,b){ return Math.min(b,Math.max(a,v)); }
+function theObj(){ return cfg.objs[cur]; }
+
+/* Moment of inertia in kg·m², from mass in grams and sizes in centimetres. */
+function inertiaOf(o){
+  var M = o.m/1000;
+  var a = o.d1/100, b = o.d2/100;
+  if(o.t==='disc')   return 0.5*M*a*a;
+  if(o.t==='ring')   return 0.5*M*(a*a + b*b);
+  if(o.t==='square') return M*a*a/6;
+  if(o.t==='rect')   return M*(a*a + b*b)/12;
+  return M*a*a/12;
+}
+function periodOf(o){ return 2*Math.PI*Math.sqrt(inertiaOf(o)/cfg.kappa); }
+
+/* Half the widest span of the object, in metres — used to scale the drawing. */
+function reachOf(o){
+  var a = o.d1/100, b = o.d2/100;
+  if(o.t==='disc')   return a;
+  if(o.t==='ring')   return a;
+  if(o.t==='square') return a*Math.SQRT2/2;
+  if(o.t==='rect')   return Math.sqrt(a*a + b*b)/2;
+  return a/2;
+}
+
+function parseObjs(str){
+  var parts = String(str).split(','), out = [];
+  for(var i=0;i<parts.length && out.length<5;i++){
+    var b = String(parts[i]).split('-');
+    var t = (SHAPES.indexOf(b[0]) >= 0) ? b[0] : 'disc';
+    var m = parseFloat(b[1]), d1 = parseFloat(b[2]), d2 = parseFloat(b[3]);
+    out.push({
+      t: t,
+      m: isFinite(m) ? clamp(m,1,20000) : 500,
+      d1: isFinite(d1) ? clamp(d1,0.5,200) : 10,
+      d2: isFinite(d2) ? clamp(d2,0,200) : 0
+    });
+  }
+  while(out.length < 5){
+    var d = DEF_OBJS[out.length];
+    out.push({t:d.t,m:d.m,d1:d.d1,d2:d.d2});
+  }
+  return fixObjs(out);
+}
+
+/* A ring needs an inner radius smaller than the outer one. */
+function fixObjs(list){
+  for(var i=0;i<list.length;i++){
+    var o = list[i];
+    if(o.t==='ring' && o.d2 >= o.d1) o.d2 = Math.max(0.1, o.d1*0.8);
+    if(o.t!=='ring' && o.t!=='rect') o.d2 = 0;
+    if(o.t==='rect' && !(o.d2 > 0)) o.d2 = o.d1*0.6;
+  }
+  return list;
+}
+
+function loadConfig(){
+  try{
+    var s = JSON.parse(localStorage.getItem('tlab_cfg')||'null');
+    if(s && typeof s === 'object'){
+      if(isFinite(s.kappa)) cfg.kappa = clamp(parseFloat(s.kappa),0.001,2);
+      if(isFinite(s.n))     cfg.n     = Math.round(clamp(parseFloat(s.n),3,30));
+      if(isFinite(s.amp))   cfg.amp   = clamp(parseFloat(s.amp),10,150);
+      if(Array.isArray(s.objs)){
+        cfg.objs = parseObjs(s.objs.map(function(o){
+          return o.t+'-'+o.m+'-'+o.d1+'-'+o.d2;
+        }).join(','));
+      }
+      cfg.sound = s.sound !== false;
+      cfg.key = s.key === true;
+    }
+  }catch(e){}
+
+  var q = new URLSearchParams(location.search);
+  if(q.has('k')){ var k = parseFloat(q.get('k')); if(isFinite(k)) cfg.kappa = clamp(k,0.001,2); }
+  if(q.has('n')){ var n = parseFloat(q.get('n')); if(isFinite(n)) cfg.n = Math.round(clamp(n,3,30)); }
+  if(q.has('a')){ var a = parseFloat(q.get('a')); if(isFinite(a)) cfg.amp = clamp(a,10,150); }
+  if(q.has('o')) cfg.objs = parseObjs(q.get('o'));
+  if(q.get('lock')==='1'){ locked = true; cfg.key = false; }
+}
+
+function saveConfig(){
+  if(locked) return;
+  try{ localStorage.setItem('tlab_cfg', JSON.stringify(cfg)); }catch(e){}
+}
+
+/* ============================================================
+   2) Language
+============================================================ */
+function shapeName(t){ return SHAPE_NAME[t][lang]; }
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  var nodes = document.querySelectorAll('[data-en]');
+  for(var i=0;i<nodes.length;i++){
+    var v = nodes[i].getAttribute('data-'+lang);
+    if(v) nodes[i].textContent = v;
+  }
+  var ph = document.querySelectorAll('[data-en-ph]');
+  for(var j=0;j<ph.length;j++){
+    var p = ph[j].getAttribute('data-'+lang+'-ph');
+    if(p) ph[j].placeholder = p;
+  }
+  document.getElementById('langBtn').textContent = (lang==='en') ? 'ไทย' : 'EN';
+  document.getElementById('thTime').textContent = (lang==='en')
+    ? 'Time for ' + cfg.n + ' oscillations (s)'
+    : 'เวลา ' + cfg.n + ' รอบ (วิ)';
+  document.getElementById('countHint').textContent = (lang==='en')
+    ? 'The plate keeps twisting until you press stop. Watch the bright tape on the edge of the plate and count ' + cfg.n + ' complete oscillations, time them, then press stop and type the total.'
+    : 'แผ่นจะบิดกลับไปกลับมาจนกว่าจะกดหยุด ให้ดูแถบเทปสีสว่างที่ขอบแผ่นแล้วนับให้ครบ ' + cfg.n + ' รอบ จับเวลาไว้ แล้วกดหยุดและกรอกเวลารวม';
+  document.getElementById('viewtag').textContent = (lang==='en') ? 'TOP VIEW' : 'ภาพจากด้านบน';
+  document.getElementById('spinBtn').textContent = spinning
+    ? (lang==='en' ? 'Stop' : 'หยุด')
+    : (lang==='en' ? 'Start twisting' : 'เริ่มบิด');
+  renderStations(); renderTrials(); renderFormulas(); renderKey(); refresh();
+  setStatus('');
+}
+
+function toggleLang(){
+  lang = (lang==='en') ? 'th' : 'en';
+  try{ localStorage.setItem('tlab_lang', lang); }catch(e){}
+  applyLang();
+}
+
+/* ============================================================
+   3) Object chips
+============================================================ */
+function chipDone(i){
+  for(var k=0;k<trials.length;k++){
+    if(trials[k].i === i && String(trials[k].t).trim() !== '') return true;
+  }
+  return false;
+}
+
+function renderStations(){
+  var wrap = document.getElementById('stations');
+  wrap.innerHTML = '';
+  for(var i=0;i<5;i++){
+    (function(idx){
+      var o = cfg.objs[idx];
+      var b = document.createElement('button');
+      b.className = 'chip' + (idx===cur ? ' on' : '') + (chipDone(idx) ? ' done' : '');
+      var dims = SHAPE_DIMS[o.t];
+      var dimTxt = o.d1.toFixed(1) + (dims.d2 ? '/'+o.d2.toFixed(1) : '') + ' cm';
+      b.innerHTML = '<span class="cap">' + (idx+1) + '</span>' + shapeName(o.t)
+        + '<span class="chipsub">' + o.m + ' g · ' + dimTxt + '</span>';
+      b.addEventListener('click', function(){ selectObj(idx); });
+      wrap.appendChild(b);
+    })(i);
+  }
+}
+
+function selectObj(i){
+  if(spinning) return;
+  cur = i;
+  refresh();
+  renderStations();
+  setStatus('');
+}
+
+/* ============================================================
+   4) Drawing — top view of the plate hanging on the wire
+============================================================ */
+/* an arc that follows the rim, used to draw the tape on a round plate */
+function arcPath(r, halfDeg){
+  var a0 = (-90 - halfDeg)*Math.PI/180;
+  var a1 = (-90 + halfDeg)*Math.PI/180;
+  var x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+  var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+  return 'M'+x0+' '+y0+' A '+r+' '+r+' 0 0 1 '+x1+' '+y1;
+}
+
+function svgShape(o, ppm){
+  var col = '#1b2739', edge = 'rgba(179,157,255,.75)';
+  var tape = '#ccff33';
+  var a = (o.d1/100)*ppm, b = (o.d2/100)*ppm;
+  var th = Math.max(7, a*0.09);          /* drawn thickness of the bar */
+  var s = '';
+
+  if(o.t === 'disc'){
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+a+'" fill="'+col+'" stroke="'+edge+'" stroke-width="2"/>';
+    s += '<path d="'+arcPath(a*0.80, 17)+'" fill="none" stroke="'+tape+'" stroke-width="'+(a*0.30)+'"/>';
+  }else if(o.t === 'ring'){
+    var mid = (a+b)/2, w = Math.max(3, a-b);
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+mid+'" fill="none" stroke="'+col+'" stroke-width="'+w+'"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+a+'" fill="none" stroke="'+edge+'" stroke-width="2"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+b+'" fill="none" stroke="'+edge+'" stroke-width="2"/>';
+    s += '<path d="'+arcPath(mid, 17)+'" fill="none" stroke="'+tape+'" stroke-width="'+w+'"/>';
+  }else if(o.t === 'square'){
+    s += '<rect x="'+(cx-a/2)+'" y="'+(cy-a/2)+'" width="'+a+'" height="'+a+'" rx="3" fill="'+col+'" stroke="'+edge+'" stroke-width="2"/>';
+    s += '<rect x="'+(cx-a*0.17)+'" y="'+(cy-a/2)+'" width="'+(a*0.34)+'" height="'+(a*0.16)+'" fill="'+tape+'"/>';
+  }else if(o.t === 'rect'){
+    s += '<rect x="'+(cx-a/2)+'" y="'+(cy-b/2)+'" width="'+a+'" height="'+b+'" rx="3" fill="'+col+'" stroke="'+edge+'" stroke-width="2"/>';
+    s += '<rect x="'+(cx-a*0.17)+'" y="'+(cy-b/2)+'" width="'+(a*0.34)+'" height="'+(b*0.16)+'" fill="'+tape+'"/>';
+  }else{
+    s += '<rect x="'+(cx-a/2)+'" y="'+(cy-th/2)+'" width="'+a+'" height="'+th+'" rx="3" fill="'+col+'" stroke="'+edge+'" stroke-width="2"/>';
+    s += '<rect x="'+(cx-a/2)+'" y="'+(cy-th/2)+'" width="'+(a*0.14)+'" height="'+th+'" fill="'+tape+'"/>';
+  }
+  return s;
+}
+
+function refresh(){
+  drawScene();
+  renderKey();
+}
+
+function drawScene(){
+  var zone = document.getElementById('zone');
+  var W = zone.clientWidth, H = zone.clientHeight;
+  if(W < 20 || H < 20) return;
+  cx = W/2; cy = H/2;
+
+  var maxReach = 0.01;
+  for(var i=0;i<cfg.objs.length;i++) maxReach = Math.max(maxReach, reachOf(cfg.objs[i]));
+  var ppm = (Math.min(W,H)*0.42) / maxReach;
+
+  var o = theObj();
+  var refLen = Math.min(W,H)*0.46;
+  var svg = document.getElementById('svg');
+  svg.setAttribute('viewBox', '0 0 '+W+' '+H);
+
+  var s = '';
+  /* fixed reference line — the plate's mark passes it once per half oscillation */
+  s += '<line x1="'+cx+'" y1="'+(cy-refLen)+'" x2="'+cx+'" y2="'+cy+'" stroke="rgba(150,200,255,.45)" stroke-width="1" stroke-dasharray="6 5"/>';
+  s += '<g id="spin" transform="rotate(0 '+cx+' '+cy+')">' + svgShape(o, ppm) + '</g>';
+  /* the wire, seen end on */
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="#0a1220" stroke="rgba(179,157,255,.9)" stroke-width="2"/>';
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="2" fill="rgba(179,157,255,.9)"/>';
+  svg.innerHTML = s;
+}
+
+/* ============================================================
+   5) The twist
+   θ = θ₀ · cos(2πt/T) with T = 2π√(I/κ).
+   No damping, so it never stops on its own.
+============================================================ */
+function toggleSpin(){ if(spinning) stopSpin(); else startSpin(); }
+
+function startSpin(){
+  spinning = true;
+  primeAudio();
+  var btn = document.getElementById('spinBtn');
+  btn.classList.add('stop');
+  btn.textContent = (lang==='en') ? 'Stop' : 'หยุด';
+  setStatus(lang==='en'
+    ? 'Twisting — count ' + cfg.n + ' oscillations'
+    : 'กำลังบิด — นับให้ครบ ' + cfg.n + ' รอบ');
+
+  var T = periodOf(theObj());
+  var amp = cfg.amp;
+  var t0 = performance.now();
+
+  function frame(now){
+    if(!spinning) return;
+    var g = document.getElementById('spin');
+    if(g){
+      var t = (now - t0)/1000;
+      var deg = amp * Math.cos(2*Math.PI*t/T);
+      g.setAttribute('transform', 'rotate('+deg.toFixed(3)+' '+cx+' '+cy+')');
+    }
+    spinRAF = requestAnimationFrame(frame);
+  }
+  spinRAF = requestAnimationFrame(frame);
+}
+
+function stopSpin(){
+  spinning = false;
+  if(spinRAF) cancelAnimationFrame(spinRAF);
+  spinRAF = null;
+  var g = document.getElementById('spin');
+  if(g) g.setAttribute('transform', 'rotate(0 '+cx+' '+cy+')');
+  var btn = document.getElementById('spinBtn');
+  btn.classList.remove('stop');
+  btn.textContent = (lang==='en') ? 'Start twisting' : 'เริ่มบิด';
+  setStatus(lang==='en' ? 'Stopped — type your total below' : 'หยุดแล้ว — กรอกเวลารวมด้านล่าง');
+  addTrial(cur);
+}
+
+/* ============================================================
+   6) Sound
+============================================================ */
+var actx = null;
+function primeAudio(){
+  if(!actx){
+    try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  }
+  if(actx && actx.state==='suspended'){ try{ actx.resume(); }catch(e){} }
+}
+function beep(freq, dur){
+  if(!cfg.sound || !actx) return;
+  try{
+    var o = actx.createOscillator(), g2 = actx.createGain();
+    o.frequency.value = freq; o.type='sine';
+    g2.gain.setValueAtTime(0.0001, actx.currentTime);
+    g2.gain.exponentialRampToValueAtTime(0.22, actx.currentTime+0.01);
+    g2.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+dur);
+    o.connect(g2); g2.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+dur+0.02);
+  }catch(e){}
+}
+
+/* ============================================================
+   7) Table
+============================================================ */
+function setStatus(msg){ document.getElementById('status').textContent = msg || ''; }
+
+function loadTrials(){
+  try{
+    var raw = JSON.parse(localStorage.getItem('tlab_trials')||'[]');
+    if(Array.isArray(raw)){
+      for(var i=0;i<raw.length;i++){
+        if(raw[i] && isFinite(raw[i].i)){
+          trials.push({ i: clamp(parseInt(raw[i].i,10),0,4), t: String(raw[i].t||'') });
+        }
+      }
+    }
+  }catch(e){}
+  try{ document.getElementById('nameIn').value = localStorage.getItem('tlab_name')||''; }catch(e){}
+}
+function saveTrials(){ try{ localStorage.setItem('tlab_trials', JSON.stringify(trials)); }catch(e){} }
+function saveName(){
+  try{ localStorage.setItem('tlab_name', document.getElementById('nameIn').value); }catch(e){}
+}
+
+function addTrial(i){
+  trials.push({ i: i, t: '' });
+  saveTrials(); renderTrials();
+  var inputs = document.querySelectorAll('.t-in');
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+
+function objLabel(i){
+  var o = cfg.objs[i];
+  var d = (o.d2 > 0) ? (o.d1 + '/' + o.d2) : String(o.d1);
+  return shapeName(o.t) + '<br>' + o.m + ' g · ' + d + ' cm';
+}
+
+function renderTrials(){
+  var tb = document.getElementById('tbody');
+  var empty = document.getElementById('empty');
+  tb.innerHTML = '';
+  if(trials.length === 0){ empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  for(var i=0;i<trials.length;i++){
+    var tr = document.createElement('tr');
+
+    var td1 = document.createElement('td');
+    td1.className = 'n'; td1.textContent = (i+1);
+
+    var td2 = document.createElement('td');
+    td2.className = 'par';
+    td2.innerHTML = objLabel(trials[i].i);
+
+    var td3 = document.createElement('td');
+    var inp = document.createElement('input');
+    inp.type='number'; inp.step='0.01'; inp.min='0'; inp.className='t-in';
+    inp.placeholder = (lang==='en') ? 'e.g. 22.3' : 'เช่น 22.3';
+    inp.value = trials[i].t;
+    (function(ii){
+      inp.addEventListener('input', function(){
+        trials[ii].t = this.value;
+        saveTrials(); renderStations();
+      });
+    })(i);
+    td3.appendChild(inp);
+
+    var td4 = document.createElement('td');
+    var b = document.createElement('button');
+    b.className='del'; b.textContent='×';
+    b.setAttribute('aria-label','delete');
+    (function(ii){
+      b.addEventListener('click', function(){
+        trials.splice(ii,1);
+        saveTrials(); renderTrials(); renderStations();
+      });
+    })(i);
+    td4.appendChild(b);
+
+    tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+    tb.appendChild(tr);
+  }
+}
+
+function clearTrials(){
+  var msg = (lang==='en') ? 'Delete all trials?' : 'ลบข้อมูลทั้งหมด?';
+  if(confirm(msg)){
+    trials = [];
+    saveTrials(); renderTrials(); renderStations(); setStatus('');
+  }
+}
+
+/* the theory formulas card — only the shapes actually in use */
+function renderFormulas(){
+  var seen = {}, rows = '';
+  for(var i=0;i<cfg.objs.length;i++){
+    var t = cfg.objs[i].t;
+    if(seen[t]) continue;
+    seen[t] = 1;
+    rows += '<div><b>' + shapeName(t) + '</b> — ' + SHAPE_FORMULA[t] + '</div>';
+  }
+  document.getElementById('ftable').innerHTML = rows;
+}
+
+/* ============================================================
+   8) Export
+============================================================ */
+function buildRows(){
+  var name = document.getElementById('nameIn').value || '';
+  var head = (lang==='en')
+    ? ['Name','Trial','Object','Mass (g)','Size 1 (cm)','Size 2 (cm)','Time for '+cfg.n+' oscillations (s)']
+    : ['ชื่อ','ครั้งที่','วัตถุ','มวล (g)','ขนาด 1 (cm)','ขนาด 2 (cm)','เวลา '+cfg.n+' รอบ (s)'];
+  var rows = [head];
+  for(var i=0;i<trials.length;i++){
+    var o = cfg.objs[trials[i].i];
+    rows.push([name, (i+1), shapeName(o.t), o.m, o.d1, o.d2, trials[i].t]);
+  }
+  return rows;
+}
+
+function copyTable(){
+  var txt = buildRows().map(function(r){ return r.join('\t'); }).join('\n');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){
+      toast(lang==='en' ? 'Table copied' : 'คัดลอกตารางแล้ว');
+    }, function(){ fallbackCopy(txt); });
+  } else fallbackCopy(txt);
+}
+
+function fallbackCopy(txt, okMsg){
+  var ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{
+    document.execCommand('copy');
+    toast(okMsg || (lang==='en'?'Table copied':'คัดลอกตารางแล้ว'));
+  }catch(e){ toast(lang==='en'?'Copy failed':'คัดลอกไม่สำเร็จ'); }
+  document.body.removeChild(ta);
+}
+
+function downloadCSV(){
+  var csv = '\uFEFF' + buildRows().map(function(r){
+    return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(',');
+  }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  var nm = (document.getElementById('nameIn').value || 'lab').replace(/[^\w\u0E00-\u0E7F-]+/g,'_');
+  a.download = nm + '_torsion.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+}
+
+function toast(msg){
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  setTimeout(function(){ el.classList.remove('on'); }, 1800);
+}
+
+/* ============================================================
+   9) Teacher settings
+============================================================ */
+function buildObjRows(){
+  var wrap = document.getElementById('orows');
+  wrap.innerHTML = '';
+  for(var i=0;i<5;i++){
+    var o = cfg.objs[i];
+    var opts = '';
+    for(var s=0;s<SHAPES.length;s++){
+      opts += '<option value="'+SHAPES[s]+'"'+(SHAPES[s]===o.t?' selected':'')+'>'+SHAPE_NAME[SHAPES[s]][lang]+'</option>';
+    }
+    var div = document.createElement('div');
+    div.className = 'orow';
+    div.innerHTML =
+      '<div class="otop"><span class="oidx">'+(i+1)+'</span>'
+      + '<select id="setT'+i+'">'+opts+'</select></div>'
+      + '<div class="odims">'
+      +   '<div class="cell"><span>'+(lang==='en'?'mass (g)':'มวล (g)')+'</span><input type="number" id="setM'+i+'" min="1" max="20000" step="1" value="'+o.m+'"></div>'
+      +   '<div class="cell"><span id="cap1_'+i+'"></span><input type="number" id="setD1_'+i+'" min="0.5" max="200" step="0.5" value="'+o.d1+'"></div>'
+      +   '<div class="cell" id="cell2_'+i+'"><span id="cap2_'+i+'"></span><input type="number" id="setD2_'+i+'" min="0" max="200" step="0.5" value="'+o.d2+'"></div>'
+      + '</div>';
+    wrap.appendChild(div);
+  }
+  for(var k=0;k<5;k++){
+    (function(idx){
+      document.getElementById('setT'+idx).addEventListener('change', function(){
+        syncDimLabels(idx); checkObjs();
+      });
+      document.getElementById('setM'+idx).addEventListener('input', checkObjs);
+      document.getElementById('setD1_'+idx).addEventListener('input', checkObjs);
+      document.getElementById('setD2_'+idx).addEventListener('input', checkObjs);
+      syncDimLabels(idx);
+    })(k);
+  }
+}
+
+function syncDimLabels(i){
+  var t = document.getElementById('setT'+i).value;
+  var dims = SHAPE_DIMS[t];
+  document.getElementById('cap1_'+i).textContent = (dims.d1[lang] || dims.d1.en) + ' (cm)';
+  var cell2 = document.getElementById('cell2_'+i);
+  if(dims.d2){
+    cell2.style.visibility = 'visible';
+    document.getElementById('cap2_'+i).textContent = (dims.d2[lang] || dims.d2.en) + ' (cm)';
+  }else{
+    cell2.style.visibility = 'hidden';
+  }
+}
+
+function readObjs(){
+  var out = [];
+  for(var i=0;i<5;i++){
+    var t = document.getElementById('setT'+i).value;
+    var m = parseFloat(document.getElementById('setM'+i).value);
+    var d1 = parseFloat(document.getElementById('setD1_'+i).value);
+    var d2 = parseFloat(document.getElementById('setD2_'+i).value);
+    if(!isFinite(m) || !isFinite(d1)) return null;
+    out.push({
+      t: t,
+      m: clamp(m,1,20000),
+      d1: clamp(d1,0.5,200),
+      d2: isFinite(d2) ? clamp(d2,0,200) : 0
+    });
+  }
+  return fixObjs(out);
+}
+
+/* warn the teacher if any period lands outside a hand-timeable range */
+function checkObjs(){
+  var el = document.getElementById('objWarn');
+  var k = parseFloat(document.getElementById('setK').value);
+  var list = readObjs();
+  if(!list || !isFinite(k) || k <= 0){ el.style.display='none'; return; }
+  var keep = cfg.kappa;
+  cfg.kappa = clamp(k,0.001,2);
+  var bad = [];
+  for(var i=0;i<5;i++){
+    var T = 2*Math.PI*Math.sqrt(inertiaOf(list[i])/cfg.kappa);
+    if(T < 0.8 || T > 12) bad.push((i+1)+': T=' + T.toFixed(2) + ' s');
+  }
+  cfg.kappa = keep;
+  if(bad.length === 0){ el.style.display='none'; return; }
+  el.style.display='block';
+  el.textContent = (lang==='en')
+    ? 'These periods are hard to time by hand — ' + bad.join(', ') + '. Adjust κ, the mass, or the size.'
+    : 'คาบเหล่านี้จับเวลาด้วยมือได้ยาก — ' + bad.join(', ') + ' ให้ปรับค่า κ มวล หรือขนาด';
+}
+
+function openSettings(){
+  document.getElementById('setK').value = cfg.kappa;
+  document.getElementById('setN').value = cfg.n;
+  document.getElementById('setAmp').value = cfg.amp;
+  buildObjRows();
+  setSound(cfg.sound); setKey(cfg.key);
+  checkObjs();
+  document.getElementById('linkBox').style.display='none';
+  document.getElementById('linkNote').style.display='none';
+  document.getElementById('copyLinkBtn').style.display='none';
+  document.getElementById('mask').classList.add('on');
+}
+function closeSettings(){ document.getElementById('mask').classList.remove('on'); }
+
+function setSound(s){
+  cfg.sound = !!s;
+  document.getElementById('snd-on').classList.toggle('on', !!s);
+  document.getElementById('snd-off').classList.toggle('on', !s);
+}
+function setKey(k){
+  cfg.key = !!k;
+  document.getElementById('key-on').classList.toggle('on', !!k);
+  document.getElementById('key-off').classList.toggle('on', !k);
+}
+
+function commitSettings(){
+  var k = parseFloat(document.getElementById('setK').value);
+  var n = parseFloat(document.getElementById('setN').value);
+  var a = parseFloat(document.getElementById('setAmp').value);
+  var list = readObjs();
+  if(!isFinite(k) || k <= 0){ toast(lang==='en'?'Enter a torsion constant':'กรอกค่าคงตัวการบิด'); return false; }
+  if(!isFinite(n)){ toast(lang==='en'?'Enter the number of oscillations':'กรอกจำนวนรอบ'); return false; }
+  if(!isFinite(a)){ toast(lang==='en'?'Enter a twist angle':'กรอกมุมบิด'); return false; }
+  if(!list){ toast(lang==='en'?'Every object needs a mass and a size':'วัตถุทุกชิ้นต้องมีมวลและขนาด'); return false; }
+  cfg.kappa = clamp(k,0.001,2);
+  cfg.n = Math.round(clamp(n,3,30));
+  cfg.amp = clamp(a,10,150);
+  cfg.objs = list;
+  cur = 0;
+  saveConfig();
+  applyLang();
+  return true;
+}
+
+function applySettings(){
+  if(!commitSettings()) return;
+  closeSettings();
+  toast(lang==='en' ? 'Settings applied' : 'บันทึกค่าแล้ว');
+}
+
+function makeLink(){
+  if(!commitSettings()) return;
+  var o = cfg.objs.map(function(x){ return x.t+'-'+x.m+'-'+x.d1+'-'+x.d2; }).join(',');
+  var url = location.origin + location.pathname
+    + '?k=' + cfg.kappa
+    + '&n=' + cfg.n
+    + '&a=' + cfg.amp
+    + '&o=' + o
+    + '&lock=1';
+  var box = document.getElementById('linkBox');
+  var okHost = (location.protocol === 'http:' || location.protocol === 'https:')
+    && location.origin && location.origin !== 'null';
+  if(!okHost){
+    box.textContent = (lang==='en')
+      ? 'This preview has no real web address, so a working link cannot be made here. Upload this file to a host such as GitHub Pages, open it from that address, then press this button again.'
+      : 'พรีวิวนี้ยังไม่มีที่อยู่เว็บจริง จึงสร้างลิงก์ที่ใช้งานได้ไม่ได้ ให้อัปโหลดไฟล์นี้ขึ้นเว็บโฮสต์ เช่น GitHub Pages เปิดจากที่อยู่นั้น แล้วกดปุ่มนี้อีกครั้ง';
+    box.style.color = 'var(--signal)';
+    box.style.display = 'block';
+    document.getElementById('linkNote').style.display = 'none';
+    document.getElementById('copyLinkBtn').style.display = 'none';
+    return;
+  }
+  box.style.color = '';
+  box.textContent = url;
+  box.style.display = 'block';
+  document.getElementById('linkNote').style.display='block';
+  document.getElementById('copyLinkBtn').style.display='block';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){}, function(){});
+  }
+}
+
+/* The automatic copy above silently fails in some viewers, so this
+   button is the reliable fallback: it reads the link off the screen. */
+function copyLink(){
+  var url = document.getElementById('linkBox').textContent;
+  if(!url) return;
+  var msg = lang==='en' ? 'Link copied' : 'คัดลอกลิงก์แล้ว';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){ toast(msg); },
+      function(){ fallbackCopy(url, msg); });
+  } else fallbackCopy(url, msg);
+}
+
+function renderKey(){
+  var el = document.getElementById('keyLine');
+  if(locked || !cfg.key || !authed){ el.style.display='none'; return; }
+  var o = theObj();
+  var I = inertiaOf(o), T = periodOf(o);
+  el.style.display = 'block';
+  el.textContent = (lang==='en' ? 'Answer key — κ = ' : 'เฉลย — κ = ') + cfg.kappa
+    + ' N·m/rad · I = ' + I.toExponential(3) + ' kg·m²'
+    + ' · T = ' + T.toFixed(3) + ' s'
+    + ' · ' + cfg.n + '× = ' + (T*cfg.n).toFixed(2) + ' s';
+}
+
+/* ============================================================
+   10) Start up
+============================================================ */
+(function init(){
+  loadConfig();
+  try{
+    var sl = localStorage.getItem('tlab_lang');
+    if(sl==='th'||sl==='en') lang = sl;
+  }catch(e){}
+  if(locked) document.getElementById('gearBtn').style.display='none';
+
+  loadTrials();
+  applyLang();
+
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt);
+    rt = setTimeout(function(){ if(!spinning) drawScene(); }, 160);
+  });
+})();
+</script>
+</body>
+</html>
